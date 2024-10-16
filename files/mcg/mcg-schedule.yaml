@@ -1,0 +1,36 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: backup-mcg-db
+  labels:
+    velero.io/storage-location: default
+  namespace: openshift-adp
+spec:
+  schedule: 0 6 * * *
+  template:
+    hooks:
+      resources:
+        - name: postgreSQL
+          includedResources:
+            - pods 
+          excludedResources: []
+          labelSelector:
+            matchLabels:
+              noobaa-db: postgres
+          pre:
+            - exec:
+                container: db
+                command:
+                  - psql
+                  - nbcore
+                  - -c
+                  - CHECKPOINT;
+                onError: Fail
+                timeout: 30s
+    includedNamespaces:
+    - openshift-storage
+    labelSelector:
+      matchLabels:
+        app: noobaa
+    storageLocation: velero-dpa-1
+    ttl: 720h0m0s

@@ -1,0 +1,465 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: multiple-pvs
+  labels:
+    app: mysql
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql
+  namespace: multiple-pvs
+  labels:
+    app: mysql
+stringData:
+  database-name: MYSQL_DATABASE
+  database-password: MYSQL_PASSWORD
+  database-root-password: MYSQL_ROOT_PASSWORD
+  database-user: MYSQL_USER
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    template.openshift.io/expose-uri: mysql://{.spec.clusterIP}:{.spec.ports[?(.name=="mysql")].port}
+  name: mysql1
+  namespace: multiple-pvs
+  labels:
+    app: mysql1
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  selector:
+    name: mysql1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql1
+  namespace: multiple-pvs
+  labels:
+    app: mysql1
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "ocs-storagecluster-ceph-rbd"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    template.alpha.openshift.io/wait-for-ready: 'true'
+  name: mysql1
+  namespace: multiple-pvs
+  labels:
+    app: mysql1
+spec:
+  selector:
+    matchLabels:
+      app: mysql1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql1
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mysql
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mysql
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-root-password
+              name: mysql
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: mysql
+        ports:
+        - containerPort: 3306
+          name: mysql
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    template.openshift.io/expose-uri: mysql://{.spec.clusterIP}:{.spec.ports[?(.name=="mysql")].port}
+  name: mysql2
+  namespace: multiple-pvs
+  labels:
+    app: mysql2
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  selector:
+    name: mysql2
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql2
+  namespace: multiple-pvs
+  labels:
+    app: mysql2
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "ocs-storagecluster-ceph-rbd"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    template.alpha.openshift.io/wait-for-ready: 'true'
+  name: mysql2
+  namespace: multiple-pvs
+  labels:
+    app: mysql2
+spec:
+  selector:
+    matchLabels:
+      app: mysql2
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql2
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mysql
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mysql
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-root-password
+              name: mysql
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: mysql
+        ports:
+        - containerPort: 3306
+          name: mysql
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    template.openshift.io/expose-uri: mysql://{.spec.clusterIP}:{.spec.ports[?(.name=="mysql")].port}
+  name: mysql3
+  namespace: multiple-pvs
+  labels:
+    app: mysql3
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  selector:
+    name: mysql3
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql3
+  namespace: multiple-pvs
+  labels:
+    app: mysql3
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "ocs-storagecluster-ceph-rbd"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    template.alpha.openshift.io/wait-for-ready: 'true'
+  name: mysql3
+  namespace: multiple-pvs
+  labels:
+    app: mysql3
+spec:
+  selector:
+    matchLabels:
+      app: mysql3
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql3
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mysql
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mysql
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-root-password
+              name: mysql
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: mysql
+        ports:
+        - containerPort: 3306
+          name: mysql
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    template.openshift.io/expose-uri: mysql://{.spec.clusterIP}:{.spec.ports[?(.name=="mysql")].port}
+  name: mysql4
+  namespace: multiple-pvs
+  labels:
+    app: mysql4
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  selector:
+    name: mysql4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql4
+  namespace: multiple-pvs
+  labels:
+    app: mysql4
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "ocs-storagecluster-ceph-rbd"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    template.alpha.openshift.io/wait-for-ready: 'true'
+  name: mysql4
+  namespace: multiple-pvs
+  labels:
+    app: mysql4
+spec:
+  selector:
+    matchLabels:
+      app: mysql4
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql4
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mysql
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mysql
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-root-password
+              name: mysql
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: mysql
+        ports:
+        - containerPort: 3306
+          name: mysql
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    template.openshift.io/expose-uri: mysql://{.spec.clusterIP}:{.spec.ports[?(.name=="mysql")].port}
+  name: mysql5
+  namespace: multiple-pvs
+  labels:
+    app: mysql5
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+  selector:
+    name: mysql5
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql5
+  namespace: multiple-pvs
+  labels:
+    app: mysql5
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "ocs-storagecluster-ceph-rbd"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    template.alpha.openshift.io/wait-for-ready: 'true'
+  name: mysql5
+  namespace: multiple-pvs
+  labels:
+    app: mysql5
+spec:
+  selector:
+    matchLabels:
+      app: mysql5
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql5
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mysql
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mysql
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-root-password
+              name: mysql
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: mysql
+        ports:
+        - containerPort: 3306
+          name: mysql
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql5

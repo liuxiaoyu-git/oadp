@@ -1,0 +1,15 @@
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: oadp-obc-backup
+  namespace: openshift-adp
+spec:
+  backupName: oadp-obc-backup
+  excludedResources:
+  - nodes
+  - events
+  - events.events.k8s.io
+  - backups.velero.io
+  - restores.velero.io
+  - resticrepositories.velero.io
+  restorePVs: true

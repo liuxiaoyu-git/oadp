@@ -1,0 +1,17 @@
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: mysql-persistent-specific
+  namespace: openshift-adp
+spec:
+  backupName: mysql-persistent-specific
+  namespaceMapping:
+    mysql-persistent-specific: mysql-persistent-specific-restore
+  excludedResources:
+  - nodes
+  - events
+  - events.events.k8s.io
+  - backups.velero.io
+  - restores.velero.io
+  - resticrepositories.velero.io
+  restorePVs: true

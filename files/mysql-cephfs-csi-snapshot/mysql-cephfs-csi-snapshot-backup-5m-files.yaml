@@ -1,0 +1,12 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: mysql-cephfs-csi-snapshot-backup-5m-files
+  labels:
+    velero.io/storage-location: default
+  namespace: openshift-adp
+spec:
+  includedNamespaces:
+  - mysql-cephfs-csi-snapshot
+  storageLocation: velero-dpa-1
+  ttl: 720h0m0s

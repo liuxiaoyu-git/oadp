@@ -1,0 +1,68 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: ocsloadgenerator
+  labels:
+    app: rbd-write-workload-generator
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rbd-write-workload-generator-pv-claim
+  labels:
+    app: rbd-write-workload-generator
+  namespace: ocsloadgenerator
+spec:
+  storageClassName: ocs-storagecluster-ceph-rbd
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rbd-write-workload-generator
+  labels:
+    app: rbd-write-workload-generator
+  namespace: ocsloadgenerator
+spec:
+  selector:
+    matchLabels:
+      app: rbd-write-workload-generator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: rbd-write-workload-generator
+        workload: rbd
+        generator: 'yes'
+      annotations:
+        pre.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--freeze", "/mnt/pv"]'
+        post.hook.backup.velero.io/command: '["/sbin/fsfreeze", "--unfreeze", "/mnt/pv"]'
+    spec:
+      containers:
+      - image: quay.io/ddomingu/ocsloadgeneratorroot
+        imagePullPolicy: Always
+        name: rbdwriteworkloadgenerator
+        env:
+        - name: CEPH_PV_MOUNT_DIR
+          value: /mnt/pv
+        - name: CEPH_TEST_COMP
+          value: rbd
+        - name: CEPH_TEST_TYPE
+          value: write
+        - name: CEPH_TEST_W_CACHE
+          value: 'yes'
+        - name: CEPH_TEST_SLEEP
+          value: '1'
+        volumeMounts:
+        - name: rbd-write-workload-generator-persistent-storage
+          mountPath: /mnt/pv
+      volumes:
+      - name: rbd-write-workload-generator-persistent-storage
+        persistentVolumeClaim:
+          claimName: rbd-write-workload-generator-pv-claim

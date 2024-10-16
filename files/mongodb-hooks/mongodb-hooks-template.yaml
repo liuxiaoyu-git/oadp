@@ -1,0 +1,110 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: mongodb-hooks
+  labels:
+    app: mongodb
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb
+  namespace: mongodb-hooks
+  labels:
+    app: mongodb
+stringData:
+  database-name: MONGODB_DATABASE
+  database-password: MONGODB_PASSWORD
+  database-root-password: MONGODB_ADMIN_PASSWORD
+  database-user: MONGODB_USER
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: mongodb-hooks
+  labels:
+    app: mongodb
+spec:
+  ports:
+  - name: mongodb
+    port: 27017
+  selector:
+    name: mongodb
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb
+  namespace: mongodb-hooks
+  labels:
+    app: mongodb
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "ocs-storagecluster-ceph-rbd"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    template.alpha.openshift.io/wait-for-ready: 'true'
+  name: mongodb
+  namespace: mongodb-hooks
+  labels:
+    app: mongodb
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongodb
+      annotations:
+        pre.hook.backup.velero.io/command: '["/bin/bash", "-c", "mongo -u admin -p $MONGODB_ADMIN_PASSWORD --authenticationDatabase admin --eval \"db.fsyncLock()\""]'
+        post.hook.backup.velero.io/command: '["/bin/bash","-c","mongo -u admin -p $MONGODB_ADMIN_PASSWORD --authenticationDatabase admin --eval \"db.fsyncUnlock()\""]'
+    spec:
+      containers:
+      - image: rhscl/mongodb-26-rhel7
+        name: mongodb
+        env:
+        - name: MONGODB_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mongodb
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mongodb
+        - name: MONGODB_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-root-password
+              name: mongodb
+        - name: MONGODB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: mongodb
+        ports:
+        - containerPort: 27017
+          name: mongodb
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /var/lib/mongodb/data
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongodb

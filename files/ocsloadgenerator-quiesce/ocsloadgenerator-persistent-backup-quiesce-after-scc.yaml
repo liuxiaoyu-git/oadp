@@ -1,0 +1,13 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: ocsloadgenerator-persistent-quiesce-after-scc
+  labels:
+    velero.io/storage-location: default
+  namespace: openshift-adp
+spec:
+  hooks: {}
+  includedNamespaces:
+  - ocsloadgenerator
+  storageLocation: velero-dpa-1
+  ttl: 720h0m0s
